@@ -1,5 +1,6 @@
 import pygame
 
+from constants import CAR_SIZE_X, CAR_SIZE_Y, FIRE_SIZE_X, MAP_INDEX, FIRE_SIZE_Y, BORDER_COLOR, WIDTH, HEIGHT
 from util import *
 
 

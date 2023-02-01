@@ -4,6 +4,7 @@ import sys
 import neat
 import pygame
 from car import Car
+from constants import MAP_INDEX, WIDTH, HEIGHT
 from second_phase import run_simulation_phase_two
 from util import *
 
@@ -99,6 +100,7 @@ def run_simulation(genomes, config):
         pygame.display.flip()
         clock.tick(60)  # 60 FPS
 
+
 def detect_road(image_path):
     img = load_image(image_path)
     gray_img = image_gray(img)
@@ -117,34 +119,6 @@ def apply_mask(img, mask):
     subtraction_between_frames = np.multiply(mask_array, original_array)
     display_image(subtraction_between_frames)
 
-
-def reduce_dimensionality(lista):
-    l = []
-    for i in range(len(lista)):
-        l.append(lista[i][0])
-    return l
-
-
-def equalizer(list1, list2):
-    len1 = len(list1)
-    len2 = len(list2)
-
-    diff = abs(len1 - len2)
-    if len1 < len2:
-        list1 = expand(list1, diff)
-    else:
-        list2 = expand(list2, diff)
-
-    return list1, list2
-
-def expand(lista, diff):
-    index_list = random.sample(range(0, len(lista) - 1), diff)
-    for i in index_list:
-        #
-        # index = random.randint(0, len(lista) - 1)
-        lista = np.insert(lista, i, lista[i], axis=0)
-
-    return lista
 
 if __name__ == "__main__":
     # Load Config
@@ -178,6 +152,3 @@ if __name__ == "__main__":
 
     # with open(PICKLE_FOLDER + "red.pkl", "wb") as f:
     #     pickle.dump(winner, f)
-
-
-
