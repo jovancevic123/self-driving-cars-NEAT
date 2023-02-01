@@ -1,6 +1,5 @@
 import pygame
 
-from constants import CAR_SIZE_X, CAR_SIZE_Y, FIRE_SIZE_X, MAP_INDEX, FIRE_SIZE_Y, BORDER_COLOR, WIDTH, HEIGHT
 from util import *
 
 
@@ -8,6 +7,7 @@ class Car:
 
     def __init__(self, car_image_path):
         # Load Car Sprite and Rotate
+        self.car_image_path = car_image_path
         self.car = pygame.image.load(car_image_path).convert_alpha()  # Convert Speeds Up A Lot
         self.car = pygame.transform.scale(self.car, (CAR_SIZE_X, CAR_SIZE_Y))
         self.fire = pygame.image.load('maps/fire.png').convert_alpha()  # Convert Speeds Up A Lot
@@ -34,6 +34,7 @@ class Car:
         self.time = 0  # Time Passed
 
         self.detected_map = pygame.image.load('maps/detected_map.png').convert()
+        self.frame_iterator = 0
 
     def draw(self, screen):
         screen.blit(self.rotated_car, self.position)
@@ -79,8 +80,16 @@ class Car:
                                              right_top[0], right_top[1],
                                              left_bottom[0], left_bottom[1],
                                              right_bottom[0], right_bottom[1], point[0], point[1]):
-
-                screen.blit(self.fire, point)
+                MAP, PICKLE_FOLDER = get_constants_main(MAP_INDEX)
+                img = load_image(MAP)
+                cv2.circle(img, (int(point[0]), int(point[1])), 5, (0, 255, 0), 2)
+                cv2.circle(img, (int(left_top[0]), int(left_top[1])), 5, (255, 0, 255), 2)
+                cv2.circle(img, (int(right_top[0]), int(right_top[1])), 5, (255, 0, 255), 2)
+                cv2.circle(img, (int(left_bottom[0]), int(left_bottom[1])), 5, (255, 0, 255), 2)
+                cv2.circle(img, (int(right_bottom[0]), int(right_bottom[1])), 5, (255, 0, 255), 2)
+                # display_image(img)
+                # print(self.car_image_path)
+                screen.blit(self.fire, (self.center[0] - 25, self.center[1] - 30))
                 pygame.display.update()
                 pygame.time.wait(300)
                 self.alive = False
@@ -90,7 +99,7 @@ class Car:
             return
         for point in self.corners:
             if self.does_points_lie_on_rectangle(point, another_car):
-                screen.blit(self.fire, point)
+                screen.blit(self.fire, (self.center[0] - 25, self.center[1] - 30))
                 pygame.display.update()
                 pygame.time.wait(300)
                 self.alive = False
@@ -126,7 +135,7 @@ class Car:
     def update(self, game_map, phase_index, another_car=None, screen=None, with_detection=False):
 
         coords = None
-        if phase_index != 1 and self.alive and with_detection:
+        if phase_index != 1 and self.alive and with_detection and self.frame_iterator % 10 == 0:
             string_image = pygame.image.tostring(screen, 'RGB')
             temp_surf = pygame.image.fromstring(string_image, (WIDTH, HEIGHT), 'RGB')
             tmp_arr = pygame.surfarray.array3d(temp_surf)
@@ -167,12 +176,15 @@ class Car:
         self.corners = get_corners(self.center, self.angle, length)
 
         # Check Collisions And Clear Radars
-        self.check_collision(game_map)
-        if not with_detection and phase_index != 1 and self.alive:
-            self.check_collision_with_another_car_no_detection(another_car, screen)
-        elif phase_index != 1 and self.alive and coords is not None:
-            x, y, w, h = coords
-            self.check_collision_with_another_car([x + w // 2, y + h // 2], screen, another_car.angle)
+        if self.frame_iterator % 10 == 0:
+            self.check_collision(game_map)
+            if not with_detection and phase_index != 1 and self.alive:
+                self.check_collision_with_another_car_no_detection(another_car, screen)
+            elif phase_index != 1 and self.alive and coords is not None:
+                x, y, w, h = coords
+                self.check_collision_with_another_car([x + w // 2, y + h // 2], screen, another_car.angle)
+
+        self.frame_iterator += 1
 
         self.radars.clear()
 

@@ -87,9 +87,9 @@ def run_simulation_phase_two(genomes, config, with_detection):
         pygame.display.flip()
         clock.tick(60)  # 60 FPS
 
-        print("red: ")
-        print(cars[0].distance)
-        print(cars[0].time, end="\n\n")
-        print("blue: ")
-        print(cars[1].distance)
-        print(cars[1].time, end="\n\n")
+        # print("red: ")
+        # print(cars[0].distance)
+        # print(cars[0].time, end="\n\n")
+        # print("blue: ")
+        # print(cars[1].distance)
+        # print(cars[1].time, end="\n\n")
