@@ -12,4 +12,4 @@ FIRE_SIZE_Y = 60
 BORDER_COLOR = (0, 0, 255, 255)  # Color To Crash on Hit RGB
 CAR_COLOR = (255, 0, 0, 255)
 
-MAP_INDEX = 1
+MAP_INDEX = 2

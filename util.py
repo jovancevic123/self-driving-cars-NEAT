@@ -1,10 +1,9 @@
-import os
-import cv2
-import matplotlib
 import math
-from matplotlib import pyplot as plt
+
+import cv2
 import numpy as np
-from constants import *
+from matplotlib import pyplot as plt
+
 
 def load_image(path):
     return cv2.cvtColor(cv2.imread(path), cv2.COLOR_BGR2RGB)
@@ -23,43 +22,33 @@ def image_gray(image):
 
 
 def image_bin(image_gs):
-    height, width = image_gs.shape[0:2]
-    image_binary = np.ndarray((height, width), dtype=np.uint8)
     ret, image_bin = cv2.threshold(image_gs, 0, 255, cv2.THRESH_BINARY_INV + cv2.THRESH_OTSU)
     return image_bin
 
 
-def select_roi(image_orig, image_bin):
-    # display_image(image_bin)
-    im_floodfill = image_bin.copy()
-    im_floodfill = cv2.bitwise_not(im_floodfill)
+def detect_map(image_orig, image_bin):
+    image_bin_copy = image_bin.copy()
+    image_bin_copy = cv2.bitwise_not(image_bin_copy)
 
-    # Mask used to flood filling.
-    # Notice the size needs to be 2 pixels than the image.
     h, w = image_bin.shape[:2]
     mask = np.zeros((h + 2, w + 2), np.uint8)
 
-    # Floodfill from point (0, 0)
-    cv2.floodFill(im_floodfill, mask, (0, 0), 0)
-    display_image(im_floodfill)
+    cv2.floodFill(image_bin_copy, mask, (0, 0), 0)
+    display_image(image_bin_copy)
 
-    # Invert floodfilled image
-    im_floodfill_inv = cv2.bitwise_not(im_floodfill)
+    image_bin_copy_inv = cv2.bitwise_not(image_bin_copy)
 
     kernel = np.ones((2, 2), np.uint8)
-    im_floodfill_inv = cv2.dilate(im_floodfill_inv, kernel, iterations=4)
-    im_floodfill_inv = cv2.erode(im_floodfill_inv, kernel, iterations=3)
-    display_image(im_floodfill_inv)
+    image_bin_copy_inv = cv2.dilate(image_bin_copy_inv, kernel, iterations=4)
+    image_bin_copy_inv = cv2.erode(image_bin_copy_inv, kernel, iterations=3)
+    display_image(image_bin_copy_inv)
 
-    # Combine the two images to get the foreground.
-    im_out = im_floodfill | im_floodfill_inv
-    # display_image(backtorgb)
-    im_floodfill_inv[np.where((im_floodfill_inv == [0]).all(axis=1))] = [255]
-    backtorgb = cv2.cvtColor(im_floodfill_inv, cv2.COLOR_GRAY2RGB)
-    backtorgb[np.where((backtorgb == [255, 255, 255]).all(axis=2))] = [255, 0, 0]
-    display_image(backtorgb, False)
+    image_bin_copy_inv[np.where((image_bin_copy_inv == [0]).all(axis=1))] = [255]
+    bin_to_rgb = cv2.cvtColor(image_bin_copy_inv, cv2.COLOR_GRAY2RGB)
+    bin_to_rgb[np.where((bin_to_rgb == [255, 255, 255]).all(axis=2))] = [255, 0, 0]
+    display_image(bin_to_rgb, False)
 
-    cv2.imwrite("maps/detected_map.png", backtorgb)
+    cv2.imwrite("maps/detected_map.png", bin_to_rgb)
 
     return image_orig
 
@@ -85,24 +74,18 @@ def area(x1, y1, x2, y2, x3, y3):
 
 
 def check(x1, y1, x2, y2, x3, y3, x4, y4, x, y):
-    # Calculate area of rectangle ABCD
     A = (area(x1, y1, x2, y2, x3, y3) + area(x1, y1, x4, y4, x3, y3))
 
-    # Calculate area of triangle PAB
     A1 = area(x, y, x1, y1, x2, y2)
 
-    # Calculate area of triangle PBC
     A2 = area(x, y, x2, y2, x3, y3)
 
-    # Calculate area of triangle PCD
     A3 = area(x, y, x3, y3, x4, y4)
 
-    # Calculate area of triangle PAD
     A4 = area(x, y, x1, y1, x4, y4)
 
-    # Check if sum of A1, A2, A3
-    # and A4 is same as A
     suma = A1 + A2 + A3 + A4
+
     return A == suma
 
 
@@ -153,6 +136,7 @@ def detect_another_car(image, my_corners):
                 return x, y, w, h
     return None
 
+
 def get_constants_main(map_index):
     f = open("maps/starting_positions")
     for i, line in enumerate(f.readlines()):
@@ -165,6 +149,7 @@ def get_constants_main(map_index):
     PICKLE_FOLDER = "results/" + MAP_NAME + "_map_nice_showcase/"
 
     return MAP, PICKLE_FOLDER
+
 
 def get_constants_car(map_index):
     f = open("maps/starting_positions")

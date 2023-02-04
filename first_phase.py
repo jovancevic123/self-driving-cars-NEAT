@@ -1,5 +1,4 @@
 import pickle
-import random
 import sys
 import neat
 import pygame
@@ -12,16 +11,13 @@ nets = []
 
 
 def run_simulation(genomes, config):
-    # Empty Collections For Nets and Cars
     global nets
     nets = []
     cars = []
 
-    # Initialize PyGame And The Display
     pygame.init()
     screen = pygame.display.set_mode((WIDTH, HEIGHT))
 
-    # For All Genomes Passed Create A New Neural Network
     for i, g in genomes:
         net = neat.nn.FeedForwardNetwork.create(g, config)
         nets.append(net)
@@ -29,26 +25,21 @@ def run_simulation(genomes, config):
 
         cars.append(Car('maps/red_car.png'))
 
-    # Clock Settings
-    # Font Settings & Loading Map
     clock = pygame.time.Clock()
     generation_font = pygame.font.SysFont("Arial", 30)
     alive_font = pygame.font.SysFont("Arial", 20)
-    game_map = pygame.image.load(MAP).convert()  # Convert Speeds Up A Lot
+    game_map = pygame.image.load(MAP).convert()
 
     global current_generation
     current_generation += 1
 
-    # Simple Counter To Roughly Limit Time (Not Good Practice)
     counter = 0
 
     while True:
-        # Exit On Quit Event
         for event in pygame.event.get():
             if event.type == pygame.QUIT:
                 sys.exit(0)
 
-        # For Each Car Get The Acton It Takes
         for i, car in enumerate(cars):
             output = nets[i].activate(car.get_data())
             choice = output.index(max(output))
@@ -58,34 +49,30 @@ def run_simulation(genomes, config):
             elif choice == 1:
                 car.angle -= 10  # Right
             elif choice == 2:
-                if (car.speed - 2 >= 12):
+                if car.speed - 2 >= 12:
                     car.speed -= 2  # Slow Down
             else:
                 car.speed += 2  # Speed Up
 
-        # Check If Car Is Still Alive
-        # Increase Fitness If Yes And Break Loop If Not
         still_alive = 0
         for i, car in enumerate(cars):
             if car.is_alive():
                 still_alive += 1
-                car.update(game_map, 1)
+                car.update(1)
                 genomes[i][1].fitness += car.get_reward()
 
         if still_alive == 0:
             break
 
         counter += 1
-        if counter == 30 * 40:  # Stop After About 20 Seconds
+        if counter == 30 * 40:
             break
 
-        # Draw Map And All Cars That Are Alive
         screen.blit(game_map, (0, 0))
         for car in cars:
             if car.is_alive():
                 car.draw(screen)
 
-        # Display Info
         text = generation_font.render("Generation: " + str(current_generation), True, (0, 0, 0))
         pygame.draw.rect(screen, (255, 255, 255), pygame.Rect(0, 0, 180, 100))
         text_rect = text.get_rect()
@@ -98,14 +85,14 @@ def run_simulation(genomes, config):
         screen.blit(text, text_rect)
 
         pygame.display.flip()
-        clock.tick(60)  # 60 FPS
+        clock.tick(60)
 
 
 def detect_road(image_path):
     img = load_image(image_path)
     gray_img = image_gray(img)
     th, bin_img = cv2.threshold(gray_img, 180, 255, cv2.THRESH_BINARY_INV)
-    select_roi(img, bin_img)
+    detect_map(img, bin_img)
 
 
 def apply_mask(img, mask):
@@ -121,7 +108,6 @@ def apply_mask(img, mask):
 
 
 if __name__ == "__main__":
-    # Load Config
     config_path = "config.txt"
     MAP, PICKLE_FOLDER = get_constants_main(MAP_INDEX)
 
@@ -148,7 +134,7 @@ if __name__ == "__main__":
     # generations = 40
 
     # winner = population.run(run_simulation, generations)
-    run_simulation_phase_two(genomes, config, False)
+    run_simulation_phase_two(genomes, config, True)
 
     # with open(PICKLE_FOLDER + "red.pkl", "wb") as f:
     #     pickle.dump(winner, f)
